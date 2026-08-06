@@ -1,4 +1,4 @@
-from random import choice, randint
+from random import randint
 # from typing import TYPE_CHECKING
 import cv2
 import numpy as np
@@ -7,7 +7,7 @@ from detection.yolov3.utils.datasets import LoadImagesAndLabels
 from detection.yolov3.utils.utils import plot_one_box, xywh2xyxy
 
 # if TYPE_CHECKING:
-from typing import Dict, List, Union
+from typing import List
 
 from matplotlib import axes
 from matplotlib.image import AxesImage
@@ -37,3 +37,4 @@ def show_random_image(dataset: LoadImagesAndLabels, ax: axes.Axes, classes: List
         )
 
     return show_image(image, ax)
+

@@ -1,7 +1,9 @@
 import math
 from pathlib import Path
 from matplotlib import pyplot as plt
+
 from common.utils import show_random_image
+from coco.utils import convert2coco
 from detection.yolov3.utils.utils import load_classes
 from detection.data_loader import FDFLoader
 
@@ -117,11 +119,22 @@ def load_dataset():
 
     return train_dataset, test_dataset
 
+
+
+
 if __name__ == '__main__':
     check_dataset()
     train_dataset, test_dataset = load_dataset()
     # Now, show a random training and testing image with annotations to make sure that we have loaded the dataset correctly:
-    f, axarr = plt.subplots(1, 2, figsize=(20,20))
-    show_random_image(train_dataset, axarr[0], load_classes(FISH_CLASSES_PATH["names_file"]))
-    show_random_image(test_dataset, axarr[1], load_classes(FISH_CLASSES_PATH["names_file"]))
-    plt.show()
+    # f, axarr = plt.subplots(1, 2, figsize=(20,20))
+    # show_random_image(train_dataset, axarr[0], load_classes(FISH_CLASSES_PATH["names_file"]))
+    # show_random_image(test_dataset, axarr[1], load_classes(FISH_CLASSES_PATH["names_file"]))
+    # plt.show()
+    # create folder for COCO annotations
+    data_folder = DATA_PATH
+    dataset_folder = data_folder / "fdf_images"
+    p = dataset_folder / "coco_annotations"
+    p.mkdir(exist_ok=True)
+    coco_json_file = p / "instances_train.json"
+    # convert annotations
+    convert2coco(train_dataset, coco_json_file)
