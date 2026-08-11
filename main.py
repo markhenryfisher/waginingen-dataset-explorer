@@ -1,3 +1,4 @@
+import argparse
 import math
 from pathlib import Path
 from matplotlib import pyplot as plt
@@ -12,6 +13,13 @@ NEEDED_FOLDERS = ["fdf_images", "results"]
 FISH_CLASSES_PATH = {
     "names_file": Path("detection") / "fish_classes.names",
 }
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Fully Documented Fisheries dataset converter')
+    parser.add_argument('--multi-class', action='store_true', help='convert multi-class dataset')
+    args = parser.parse_args()
+    return args
 
 def check_dataset():
     # Check if all folders are correct
@@ -76,8 +84,6 @@ def load_dataset():
     assert dataset_folder.is_dir()
 
     classes = load_classes(FISH_CLASSES_PATH["names_file"])
-    print(classes)
-
     # Check and recalculate image size
     imgsz_min, imgsz_max, imgsz_test = opt["img_size"]
 
@@ -105,7 +111,7 @@ def load_dataset():
         cache_images=opt["cache_images"],
         single_cls=opt["single_cls"],
     )
-    test_dataset = FDFLoader(
+    val_dataset = FDFLoader(
         dataset_folder,
         classes,
         subset_name="validation",
@@ -116,15 +122,28 @@ def load_dataset():
         cache_images=opt["cache_images"],
         single_cls=opt["single_cls"],
     )
+    test_dataset = FDFLoader(
+        dataset_folder,
+        classes,
+        subset_name="test",
+        img_size=imgsz_test,
+        batch_size=min(opt["batch_size"], len(train_dataset)),
+        hyp=hyp,
+        rect=True,
+        cache_images=opt["cache_images"],
+        single_cls=opt["single_cls"],
+    )
 
-    return train_dataset, test_dataset
+    return train_dataset, val_dataset, test_dataset
 
 
 
 
 if __name__ == '__main__':
+    args = parse_args()
+
     check_dataset()
-    train_dataset, test_dataset = load_dataset()
+    train_dataset, val_dataset, test_dataset = load_dataset()
     # Now, show a random training and testing image with annotations to make sure that we have loaded the dataset correctly:
     # f, axarr = plt.subplots(1, 2, figsize=(20,20))
     # show_random_image(train_dataset, axarr[0], load_classes(FISH_CLASSES_PATH["names_file"]))
@@ -135,6 +154,14 @@ if __name__ == '__main__':
     dataset_folder = data_folder / "fdf_images"
     p = dataset_folder / "coco_annotations"
     p.mkdir(exist_ok=True)
-    coco_json_file = p / "instances_train.json"
+    if args.multi_class:
+        print("Multi-class training")
+        fileroot = "multi_class_"
+    else:
+        print("Mono-class training")
+        fileroot = "mono_class_"
     # convert annotations
-    convert2coco(train_dataset, coco_json_file)
+    convert2coco(train_dataset, p / (fileroot + "debug.json"), debug=True)
+    # convert2coco(train_dataset, p / (fileroot + "train.json"))
+    # convert2coco(val_dataset, p / (fileroot + "val.json"))
+    # convert2coco(test_dataset, p / (fileroot + "test.json"))
